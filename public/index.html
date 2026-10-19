@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>推しトークメーカー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1 class="logo">推しトーク<span>メーカー</span></h1>
+      <button id="newCharBtn" class="btn primary wide">＋ キャラを追加</button>
+      <ul id="charList" class="char-list"></ul>
+    </aside>
+
+    <main class="main">
+      <section id="emptyState" class="empty">
+        <p>左の「キャラを追加」から、推しの立ち絵をアップロードしてください。</p>
+        <p class="hint">背景が透明なPNGだと、いちばん自然に動きます。</p>
+      </section>
+
+      <section id="talkView" class="talk hidden">
+        <div class="stage-wrap">
+          <div id="stage" class="stage">
+            <canvas id="stageCanvas"></canvas>
+            <div id="rigHint" class="rig-hint hidden">立ち絵の「口」の位置をクリックしてください</div>
+          </div>
+          <div class="stage-toolbar">
+            <button id="rigBtn" class="btn small">口の位置を設定</button>
+            <label class="slider">口の大きさ<input id="mouthSize" type="range" min="0.02" max="0.2" step="0.005"></label>
+            <label class="slider">揺れ<input id="motion" type="range" min="0" max="2" step="0.1"></label>
+            <label class="toggle"><input id="ttsToggle" type="checkbox">声で読み上げ</label>
+            <button id="testMouthBtn" class="btn small ghost">口パクテスト</button>
+          </div>
+        </div>
+
+        <div class="chat-panel">
+          <header class="chat-header">
+            <div>
+              <div id="charName" class="char-name"></div>
+              <div id="charSource" class="char-source"></div>
+            </div>
+            <div class="header-actions">
+              <button id="personaBtn" class="btn small ghost">人格</button>
+              <button id="resetChatBtn" class="btn small ghost">会話をリセット</button>
+            </div>
+          </header>
+          <div id="messages" class="messages"></div>
+          <form id="chatForm" class="chat-form">
+            <textarea id="chatInput" rows="1" placeholder="話しかける…（Enterで送信 / Shift+Enterで改行）"></textarea>
+            <button class="btn primary" type="submit">送信</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 新規キャラ作成 -->
+  <dialog id="newCharDialog" class="dialog">
+    <form id="newCharForm" method="dialog">
+      <h2>キャラクターを追加</h2>
+      <label class="field">立ち絵（PNG / JPEG / WebP）
+        <input name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required>
+      </label>
+      <img id="newCharPreview" class="preview hidden" alt="">
+      <label class="field">キャラクター名 <span class="req">必須</span>
+        <input name="name" required placeholder="例: 初音ミク">
+      </label>
+      <label class="field">登場作品（同名キャラとの取り違え防止に）
+        <input name="series" placeholder="例: VOCALOID">
+      </label>
+      <label class="field">補足（任意）
+        <textarea name="notes" rows="2" placeholder="例: 第2部以降の性格で / 二次創作設定ではなく公式設定で"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" data-close>キャンセル</button>
+        <button type="submit" class="btn primary" value="ok">追加してネットで人格を分析</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 分析中 -->
+  <dialog id="analyzeDialog" class="dialog">
+    <h2>人格を分析中…</h2>
+    <p class="hint">Webを検索してキャラクターの性格や口調を調べています。1〜3分ほどかかります。</p>
+    <ul id="analyzeLog" class="log"></ul>
+    <div class="dialog-actions">
+      <button type="button" id="analyzeCloseBtn" class="btn ghost hidden" data-close>閉じる</button>
+    </div>
+  </dialog>
+
+  <!-- 人格の確認・編集 -->
+  <dialog id="personaDialog" class="dialog wide">
+    <form id="personaForm" method="dialog">
+      <h2>人格プロフィール</h2>
+      <p id="personaConfidence" class="hint"></p>
+      <div class="grid2">
+        <label class="field">一人称<input name="firstPerson"></label>
+        <label class="field">あなたの呼び方<input name="secondPerson"></label>
+      </div>
+      <label class="field">概要<textarea name="summary" rows="2"></textarea></label>
+      <label class="field">性格<textarea name="personality" rows="4"></textarea></label>
+      <label class="field">口調<textarea name="speechStyle" rows="3"></textarea></label>
+      <label class="field">口癖（1行に1つ）<textarea name="catchphrases" rows="3"></textarea></label>
+      <label class="field">セリフ例（1行に1つ）<textarea name="sampleLines" rows="4"></textarea></label>
+      <label class="field">追加の設定・お願い（任意）
+        <textarea name="customInstructions" rows="3" placeholder="例: 私のことは「マスター」と呼んで / 敬語はなしで"></textarea>
+      </label>
+      <details class="sources">
+        <summary>参照した情報源</summary>
+        <ul id="sourceList"></ul>
+      </details>
+      <div class="dialog-actions">
+        <button type="button" id="reanalyzeBtn" class="btn ghost">ネットで再分析</button>
+        <button type="button" id="deleteCharBtn" class="btn danger ghost">キャラを削除</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" data-close>閉じる</button>
+        <button type="submit" class="btn primary" value="ok">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
